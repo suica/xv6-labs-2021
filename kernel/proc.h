@@ -107,3 +107,6 @@ struct proc {
   char name[16];               // Process name (debugging)
   uint64 trace_mask;
 };
+
+uint64 count_proc();
+uint64 unoccupied_memory();
