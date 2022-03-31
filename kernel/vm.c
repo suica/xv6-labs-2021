@@ -471,3 +471,16 @@ void vmprint(pagetable_t p)
   printf("page table %p\n", p);
   _vmprint_helper(1, p);
 }
+
+uint64 pgaccess(pagetable_t pgtb,uint64 start_va, uint64 cnt){
+  uint64 mask = 0;
+  for (int offset = 0; offset < cnt; offset++)
+  {
+    pte_t pte = *walk(pgtb, start_va, 0);
+    if (pte & PTE_A)
+    {
+      mask = mask | (1L << offset);
+    }
+  }
+  return mask;
+}

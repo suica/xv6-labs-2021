@@ -11,10 +11,10 @@ uint64
 sys_exit(void)
 {
   int n;
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   exit(n);
-  return 0;  // not reached
+  return 0; // not reached
 }
 
 uint64
@@ -33,7 +33,7 @@ uint64
 sys_wait(void)
 {
   uint64 p;
-  if(argaddr(0, &p) < 0)
+  if (argaddr(0, &p) < 0)
     return -1;
   return wait(p);
 }
@@ -44,11 +44,11 @@ sys_sbrk(void)
   int addr;
   int n;
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
-  
+
   addr = myproc()->sz;
-  if(growproc(n) < 0)
+  if (growproc(n) < 0)
     return -1;
   return addr;
 }
@@ -59,13 +59,14 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
-
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(myproc()->killed){
+  while (ticks - ticks0 < n)
+  {
+    if (myproc()->killed)
+    {
       release(&tickslock);
       return -1;
     }
@@ -75,22 +76,42 @@ sys_sleep(void)
   return 0;
 }
 
-
-#ifdef LAB_PGTBL
-int
-sys_pgaccess(void)
+// #ifdef LAB_PGTBL
+int sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+  uint64 start_addr;
+  if (argaddr(0, &start_addr) < 0)
+  {
+    return -1;
+  }
+  int page_num;
+  if (argint(1, &page_num) < 0)
+  {
+    return -1;
+  }
+  uint64 result_mask_addr;
+  if (argaddr(2, &result_mask_addr) < 0)
+  {
+    return -1;
+  }
+  struct proc *p = myproc();
+  vmprint(p->pagetable);
+  uint64 result = pgaccess(p->pagetable, start_addr, page_num);
+  printf("debug: %p %d %p %p\n", start_addr, page_num, result_mask_addr, result);
+  if (copyout(p->pagetable, result_mask_addr, (char *)&result, sizeof(result)) < 0)
+  {
+    return -1;
+  }
   return 0;
 }
-#endif
+// #endif
 
 uint64
 sys_kill(void)
 {
   int pid;
 
-  if(argint(0, &pid) < 0)
+  if (argint(0, &pid) < 0)
     return -1;
   return kill(pid);
 }
