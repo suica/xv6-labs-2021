@@ -15,6 +15,8 @@ extern char etext[]; // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
 
+int should_set_access_bit = 1;
+
 // Make a direct-map page table for the kernel.
 pagetable_t
 kvmmake(void)
@@ -96,7 +98,31 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
       *pte = PA2PTE(pagetable) | PTE_V;
     }
   }
-  return &pagetable[PX(0, va)];
+  pte_t *res = &pagetable[PX(0, va)];
+  // if (va == 0x4000 || va == 0x6000)
+  // {
+  //   // printf("%p\n", va);
+  //   printf("before: %p %d\n", *res, should_set_access_bit);
+  // }
+  if (should_set_access_bit)
+  {
+    // if(*res){
+    //   printf("accessed: %p %d\n", *res, should_set_access_bit);
+    // }
+    *res = *res | PTE_A;
+  }
+
+  // if (va <= 0xf010)
+  // {
+  //   printf("walk: %p\n", va);
+  // }
+
+  // if (va == 0x4000 || va == 0x6000)
+  // {
+  //   // printf("%p\n", va);
+  //   printf("after: %p\n", *res);
+  // }
+  return res;
 }
 
 // Look up a virtual address, return the physical address,
@@ -472,14 +498,16 @@ void vmprint(pagetable_t p)
   _vmprint_helper(1, p);
 }
 
-uint64 pgaccess(pagetable_t pgtb,uint64 start_va, uint64 cnt){
+uint64 pgaccess(pagetable_t pgtb, uint64 start_va, uint64 pg_cnt)
+{
   uint64 mask = 0;
-  for (int offset = 0; offset < cnt; offset++)
+  for (int pg = 0; pg < pg_cnt; pg++)
   {
-    pte_t pte = *walk(pgtb, start_va, 0);
-    if (pte & PTE_A)
+    pte_t *pte = walk(pgtb, start_va + pg * PGSIZE, 0);
+    if (*pte & PTE_A)
     {
-      mask = mask | (1L << offset);
+      mask = mask | (1L << pg);
+      *pte -= PTE_A;
     }
   }
   return mask;
