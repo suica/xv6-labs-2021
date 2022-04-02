@@ -15,8 +15,6 @@ extern char etext[]; // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
 
-int should_set_access_bit = 1;
-
 // Make a direct-map page table for the kernel.
 pagetable_t
 kvmmake(void)
@@ -99,29 +97,6 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
     }
   }
   pte_t *res = &pagetable[PX(0, va)];
-  // if (va == 0x4000 || va == 0x6000)
-  // {
-  //   // printf("%p\n", va);
-  //   printf("before: %p %d\n", *res, should_set_access_bit);
-  // }
-  if (should_set_access_bit)
-  {
-    // if(*res){
-    //   printf("accessed: %p %d\n", *res, should_set_access_bit);
-    // }
-    *res = *res | PTE_A;
-  }
-
-  // if (va <= 0xf010)
-  // {
-  //   printf("walk: %p\n", va);
-  // }
-
-  // if (va == 0x4000 || va == 0x6000)
-  // {
-  //   // printf("%p\n", va);
-  //   printf("after: %p\n", *res);
-  // }
   return res;
 }
 

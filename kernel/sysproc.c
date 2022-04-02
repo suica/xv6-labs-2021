@@ -94,15 +94,12 @@ int sys_pgaccess(void)
   {
     return -1;
   }
-  should_set_access_bit = 0;
   struct proc *p = myproc();
-  vmprint(p->pagetable);
   uint64 result = pgaccess(p->pagetable, start_addr, page_num);
   if (copyout(p->pagetable, result_mask_addr, (char *)&result, sizeof(result)) < 0)
   {
     return -1;
   }
-  should_set_access_bit = 1;
   return 0;
 }
 // #endif
