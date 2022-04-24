@@ -17,22 +17,14 @@
 
 volatile int panicked = 0;
 
-void trace_helper(uint64 fp)
-{
-  uint64 val = *(uint64 *)(fp - 8);
-  if (PGROUNDDOWN(val))
-  {
-    printf("%p\n", val);
-    uint64 fp_next = *(uint64 *)(fp - 16);
-    trace_helper(fp_next);
-  }
-}
-
 void backtrace(void)
 {
+  uint64 fp = r_fp(), top = PGROUNDUP(fp);
   printf("backtrace:\n");
-  uint64 fp = r_fp();
-  trace_helper(fp);
+  for (; fp < top; fp = *((uint64 *)(fp - 16)))
+  {
+    printf("%p\n", *((uint64 *)(fp - 8)));
+  }
 }
 
 // lock to avoid interleaving concurrent printf's.
@@ -142,8 +134,8 @@ void panic(char *s)
   printf("panic: ");
   printf(s);
   printf("\n");
-  backtrace();
   panicked = 1; // freeze uart output from other CPUs
+  backtrace();
   for (;;)
     ;
 }
